@@ -11,6 +11,9 @@ For solving:
 - Rastrigin Problem
 """
 
+def test():
+    print('this is just a test')
+
 
 def run_analysis(data):
     """
@@ -76,3 +79,4 @@ def particle_swarm_optimization(problem_data):
     """
     # TODO: Implement PSO
     pass
+
