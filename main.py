@@ -17,8 +17,11 @@ def main():
     print("Starting optimization algorithms comparison...")
     
     # Load data
-    data = load_data()
-    
+    data = load_data() # returns dictionary with 4 pd.df: tiny, small, medium, large
+    # print infos of all 4 dfs
+    for name, df in data.items():
+        print(f"\nDataset: {name}")
+        print(df.info())
     # Run analysis
     results = run_analysis(data)
     

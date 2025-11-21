@@ -6,29 +6,41 @@ Travelling Salesman Problem and Rastrigin Problem.
 """
 
 import os
+import pandas as pd
+import kagglehub
+import glob
 
-
-def load_data(data_dir="data"):
+def load_data():
     """
-    Load data from the data directory.
+    Load all CSV datasets from the Kaggle dataset cache.
+    If data is not present, it will be downloaded.
     
-    Args:
-        data_dir (str): Path to the data directory
-        
     Returns:
-        dict: Dictionary containing loaded data
+        dataframes: A dictionary of pandas DataFrames, or an empty dictionary if load is False.
     """
-    print(f"Loading data from {data_dir}...")
+
+    print("Downloading dataset (if not already cached)...")
+    # Download dataset to a local cache and return the path
+    dataset_path = kagglehub.dataset_download("mexwell/traveling-salesman-problem")
+    print(f"Dataset is available at: {dataset_path}")
+
+    print("Loading datasets from the dataset directory...") 
+    # Find all CSV files in the dataset directory
+    csv_files = glob.glob(os.path.join(dataset_path, '*.csv'))
+
+    if not csv_files:
+        print("No CSV files found in the dataset directory.")
+        return {}
+
+    dataframes = {}
+    print("Loading all TSP datasets...")
+    for file_path in csv_files:
+        # Use the filename without extension as the key
+        dataset_name = os.path.splitext(os.path.basename(file_path))[0]
+        print(f" - Loading {dataset_name}...")
+        dataframes[dataset_name] = pd.read_csv(file_path)
     
-    data = {
-        "tsp_data": None,
-        "rastrigin_data": None,
-    }
-    
-    # TODO: Implement actual data loading logic
-    # This is a placeholder implementation
-    
-    return data
+    return dataframes
 
 
 def preprocess_data(data):
