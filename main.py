@@ -11,7 +11,7 @@ import pandas as pd
 from scipy import spatial
 from sko.GA import GA_TSP
 from sko.ACA import ACA_TSP
-#from sko.PSO import PSO
+from sko.PSO import PSO_TSP
 import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
@@ -30,7 +30,10 @@ def plot_results(best_points, data, optimizer, algorithm_name, dataset_name):
     ax[0].set_ylabel('Y Coordinate')
 
     # Plot the convergence
-    ax[1].plot(optimizer.generation_best_Y)
+    if algorithm_name == "Particle Swarm Optimization":
+        ax[1].plot(optimizer.gbest_y)
+    else:
+        ax[1].plot(optimizer.generation_best_Y)
     ax[1].set_title('Convergence Over Generations')
     ax[1].set_xlabel('Generation')
     ax[1].set_ylabel('Total Distance')
@@ -39,13 +42,13 @@ def plot_results(best_points, data, optimizer, algorithm_name, dataset_name):
     plt.show()
 
 
-def run_genetic_algorithm(dataset_name, df, cal_total_distance_func, num_cities):
+def run_genetic_algorithm(dataset_name, df, cal_total_distance_func, num_cities, size_pop=100, max_iter=2000):
     """
     Runs the GA_TSP optimizer on a given dataset.
     """
     print(f'\n--- Running Genetic Algorithm on "{dataset_name}" dataset ---')
 
-    ga_tsp = GA_TSP(func=cal_total_distance_func, n_dim=num_cities, size_pop=100, max_iter=2000, prob_mut=0.1)
+    ga_tsp = GA_TSP(func=cal_total_distance_func, n_dim=num_cities, size_pop=size_pop, max_iter=max_iter, prob_mut=0.1)
     best_points, best_distance = ga_tsp.run()
 
     print(f"GA Optimization complete for '{dataset_name}'!")
@@ -53,14 +56,13 @@ def run_genetic_algorithm(dataset_name, df, cal_total_distance_func, num_cities)
 
     plot_results(best_points, df, ga_tsp, "Genetic Algorithm", dataset_name)
 
-def run_ant_colony_optimization(dataset_name, df, cal_total_distance_func, num_cities, distance_matrix):
+def run_ant_colony_optimization(dataset_name, df, cal_total_distance_func, num_cities, distance_matrix, size_pop=50, max_iter=150):
     """
     Runs the ACO_TSP optimizer on a given dataset.
     """
     print(f'\n--- Running Ant Colony Optimization on "{dataset_name}" dataset ---')
     
-    aca = ACA_TSP(func=cal_total_distance_func, n_dim=num_cities, size_pop=50, max_iter=150, distance_matrix=distance_matrix)
-    #best_x, best_y = aca.run()
+    aca = ACA_TSP(func=cal_total_distance_func, n_dim=num_cities, size_pop=size_pop, max_iter=max_iter, distance_matrix=distance_matrix)
     best_points, best_distance = aca.run()
 
     print(f"Ant Colony Optimization complete for '{dataset_name}'!")
@@ -68,17 +70,21 @@ def run_ant_colony_optimization(dataset_name, df, cal_total_distance_func, num_c
 
     plot_results(best_points, df, aca, "Ant Colony Optimization", dataset_name)
 
-def run_particle_swarm_optimization(dataset_name, df, num_cities):
+def run_particle_swarm_optimization(dataset_name, df,cal_total_distance_func, num_cities, size_pop=200, max_iter=800):
     """
     Runs the PSO optimizer on a given dataset.
     Note: Standard PSO is not designed for TSP's discrete permutation problem.
     This is a placeholder for a potential custom or modified PSO implementation.
     """
     print(f'\n--- Running Particle Swarm Optimization on "{dataset_name}" dataset ---')
-    print("Note: PSO implementation is a placeholder and not suited for TSP by default.")
     
-    # TODO: Implement a suitable version of PSO for TSP if required.
-    pass
+    pso_tsp = PSO_TSP(func=cal_total_distance_func, n_dim=num_cities, size_pop=size_pop, max_iter=max_iter, w=0.8, c1=0.1, c2=0.1)
+    best_points, best_distance = pso_tsp.run()
+
+    print(f"Particle Swarm Optimization complete for '{dataset_name}'!")
+    print(f"Best distance: {best_distance}")
+
+    plot_results(best_points, df, pso_tsp, "Particle Swarm Optimization", dataset_name)
 
 def main():
     """
@@ -111,13 +117,14 @@ def main():
             return sum([distance_matrix[routine[i % num_points], routine[(i + 1) % num_points]] for i in range(num_points)])
 
         # Run Ant Colony Optimization
-        run_ant_colony_optimization(target_dataset, df, cal_total_distance, num_cities, distance_matrix)
+        run_ant_colony_optimization(target_dataset, df, cal_total_distance, num_cities, distance_matrix, size_pop=50, max_iter=150)
 
         # Run Genetic Algorithm
-        run_genetic_algorithm(target_dataset, df, cal_total_distance, num_cities)
+        run_genetic_algorithm(target_dataset, df, cal_total_distance, num_cities, size_pop=100, max_iter=2000)
 
         # Run Particle Swarm Optimization
-        run_particle_swarm_optimization(target_dataset, df, num_cities)
+        run_particle_swarm_optimization(target_dataset, df, cal_total_distance, num_cities, size_pop=200, max_iter=800)
+    
     else:
         print(f'Target dataset "{target_dataset}" not found.')
 
