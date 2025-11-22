@@ -12,9 +12,15 @@ from scipy import spatial
 from sko.GA import GA_TSP
 from sko.ACA import ACA_TSP
 from sko.PSO import PSO_TSP
+#from sko.ACA import ACA
+from sko.GA import GA
+from sko.PSO import PSO
 import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
+
+
+#Implementation for TSP--------------
 
 def plot_results(best_points, data, optimizer, algorithm_name, dataset_name):
     """Plots the TSP route and the optimization progress."""
@@ -86,6 +92,24 @@ def run_particle_swarm_optimization(dataset_name, df,cal_total_distance_func, nu
 
     plot_results(best_points, df, pso_tsp, "Particle Swarm Optimization", dataset_name)
 
+
+#Implementation for Rastrigin--------------
+
+def rastrigin(x, A=10):
+    x = np.asarray(x)
+    return A * len(x) + np.sum(x**2 - A * np.cos(2 * np.pi * x))
+
+
+
+
+
+
+
+
+
+
+
+#main--------------------------------------
 def main():
     """
     Main function to run and compare optimization algorithms.
