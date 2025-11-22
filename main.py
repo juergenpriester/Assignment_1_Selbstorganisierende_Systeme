@@ -7,9 +7,10 @@ and the Rastrigin Problem.
 """
 
 from dataloader import load_data
+import pandas as pd
 from scipy import spatial
 from sko.GA import GA_TSP
-#from sko.ACO import ACO_TSP
+from sko.ACA import ACA_TSP
 #from sko.PSO import PSO
 import matplotlib.pyplot as plt
 import numpy as np
@@ -38,20 +39,13 @@ def plot_results(best_points, data, optimizer, algorithm_name, dataset_name):
     plt.show()
 
 
-def run_genetic_algorithm(dataset_name, df, distance_matrix):
+def run_genetic_algorithm(dataset_name, df, cal_total_distance_func, num_cities):
     """
     Runs the GA_TSP optimizer on a given dataset.
     """
     print(f'\n--- Running Genetic Algorithm on "{dataset_name}" dataset ---')
 
-    def cal_total_distance(routine):
-        num_points, = routine.shape
-        return sum([distance_matrix[routine[i % num_points], routine[(i + 1) % num_points]] for i in range(num_points)])
-
-    num_cities = distance_matrix.shape[0]
-    print(f"Number of cities: {num_cities}")
-
-    ga_tsp = GA_TSP(func=cal_total_distance, n_dim=num_cities, size_pop=100, max_iter=4000, prob_mut=0.1)
+    ga_tsp = GA_TSP(func=cal_total_distance_func, n_dim=num_cities, size_pop=100, max_iter=2000, prob_mut=0.1)
     best_points, best_distance = ga_tsp.run()
 
     print(f"GA Optimization complete for '{dataset_name}'!")
@@ -59,20 +53,22 @@ def run_genetic_algorithm(dataset_name, df, distance_matrix):
 
     plot_results(best_points, df, ga_tsp, "Genetic Algorithm", dataset_name)
 
-def run_ant_colony_optimization(dataset_name, df, distance_matrix):
+def run_ant_colony_optimization(dataset_name, df, cal_total_distance_func, num_cities, distance_matrix):
     """
     Runs the ACO_TSP optimizer on a given dataset.
     """
     print(f'\n--- Running Ant Colony Optimization on "{dataset_name}" dataset ---')
-    print("Note: ACO implementation is a placeholder.")
     
-    # TODO: Implement Ant Colony Optimization
-    # aco = ACO_TSP(func=..., n_dim=...,)
-    # best_points, best_distance = aco.run()
-    # plot_results(best_points, df, aco, "Ant Colony", dataset_name)
-    pass
+    aca = ACA_TSP(func=cal_total_distance_func, n_dim=num_cities, size_pop=50, max_iter=150, distance_matrix=distance_matrix)
+    #best_x, best_y = aca.run()
+    best_points, best_distance = aca.run()
 
-def run_particle_swarm_optimization(dataset_name, df, distance_matrix):
+    print(f"Ant Colony Optimization complete for '{dataset_name}'!")
+    print(f"Best distance: {best_distance}")
+
+    plot_results(best_points, df, aca, "Ant Colony Optimization", dataset_name)
+
+def run_particle_swarm_optimization(dataset_name, df, num_cities):
     """
     Runs the PSO optimizer on a given dataset.
     Note: Standard PSO is not designed for TSP's discrete permutation problem.
@@ -106,15 +102,22 @@ def main():
         print(f'\n>>> Running all algorithms on the "{target_dataset}" dataset <<<')
         df = all_data[target_dataset]
         distance_matrix = distance_matrices[target_dataset]
+        num_cities = distance_matrix.shape[0]
+        print(f"Number of cities: {num_cities}")
 
-        # Run Genetic Algorithm
-        run_genetic_algorithm(target_dataset, df, distance_matrix)
+        # Define the cost function once, using the selected distance_matrix
+        def cal_total_distance(routine):
+            num_points, = routine.shape
+            return sum([distance_matrix[routine[i % num_points], routine[(i + 1) % num_points]] for i in range(num_points)])
 
         # Run Ant Colony Optimization
-        run_ant_colony_optimization(target_dataset, df, distance_matrix)
+        run_ant_colony_optimization(target_dataset, df, cal_total_distance, num_cities, distance_matrix)
+
+        # Run Genetic Algorithm
+        run_genetic_algorithm(target_dataset, df, cal_total_distance, num_cities)
 
         # Run Particle Swarm Optimization
-        run_particle_swarm_optimization(target_dataset, df, distance_matrix)
+        run_particle_swarm_optimization(target_dataset, df, num_cities)
     else:
         print(f'Target dataset "{target_dataset}" not found.')
 
