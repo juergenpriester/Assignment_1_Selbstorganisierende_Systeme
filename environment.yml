@@ -1,4 +1,4 @@
-name: optimization_algorithms_test
+name: optimization_algorithms
 channels:
   - conda-forge
   - defaults
