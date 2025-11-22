@@ -1,4 +1,4 @@
-name: optimization_algorithms
+name: optimization_algorithms_test
 channels:
   - conda-forge
   - defaults
@@ -9,7 +9,6 @@ dependencies:
   - pandas>=2.0.0
   - matplotlib>=3.7.0
   - seaborn>=0.12.0
-  - scikit-opt>=0.6
   - tqdm>=4.60.0
   - pip
   - kagglehub>=0.3.13
