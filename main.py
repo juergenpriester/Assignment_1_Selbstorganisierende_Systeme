@@ -95,18 +95,6 @@ def run_particle_swarm_optimization(dataset_name, df,cal_total_distance_func, nu
 
 
 #Implementation for Rastrigin--------------
-'''
-#define rastrigin function for GA and PSO
-def rastrigin(*x, A=10):
-    x = np.array(x)
-    return A * len(x) + np.sum(x**2 - A * np.cos(2 * np.pi * x))
-
-#define rastrigin function for ACO (vector wrapper)
-def rastrigin_vector(x):
-    return rastrigin(*x) # x is a 1D numpy array
-'''
-
-
 def rastrigin_vec(x, A=10):
     """
     x: 1D numpy array-like
