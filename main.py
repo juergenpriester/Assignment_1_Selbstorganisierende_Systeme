@@ -12,12 +12,13 @@ from scipy import spatial
 from sko.GA import GA_TSP
 from sko.ACA import ACA_TSP
 from sko.PSO import PSO_TSP
-#from sko.ACA import ACA
+from aco_r_continuous import ACOR #for ACO on rastrigin
 from sko.GA import GA
 from sko.PSO import PSO
 import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
+import time
 
 
 #Implementation for TSP--------------
@@ -94,15 +95,48 @@ def run_particle_swarm_optimization(dataset_name, df,cal_total_distance_func, nu
 
 
 #Implementation for Rastrigin--------------
-
-def rastrigin(x, A=10):
-    x = np.asarray(x)
+'''
+#define rastrigin function for GA and PSO
+def rastrigin(*x, A=10):
+    x = np.array(x)
     return A * len(x) + np.sum(x**2 - A * np.cos(2 * np.pi * x))
 
+#define rastrigin function for ACO (vector wrapper)
+def rastrigin_vector(x):
+    return rastrigin(*x) # x is a 1D numpy array
+'''
 
 
+def rastrigin_vec(x, A=10):
+    """
+    x: 1D numpy array-like
+    returns scalar Rastrigin value (>= 0)
+    """
+    x = np.asarray(x, dtype=float)
+    n = x.size
+    return A * n + np.sum(x**2 - A * np.cos(2 * np.pi * x))
+
+def rastrigin_ga_pso(*x):
+    return rastrigin_vec(np.array(x))
 
 
+def run_GA_rastrigin(rastrigin, dim = 30, size_pop = 100, max_iter= 200, lower_bound = -5.12, upper_bound = 5.12, prob_mut = 0):
+    ga = GA(func=rastrigin_ga_pso, n_dim=dim, size_pop=size_pop, max_iter=max_iter, lb=[lower_bound] * dim, ub=[upper_bound] * dim)
+    best_x_ga, best_y_ga = ga.run() #best_x is position of minima found. best_y is value of minima
+    print("GA best value:", best_y_ga)
+    
+
+
+def run_PSO_rastrigin(rastrigin, dim = 30, pop = 100, max_iter= 2000, lower_bound = -5.12, upper_bound = 5.12, w=0.8, c1=0.1, c2=0.1):
+    pso = PSO(func=rastrigin_ga_pso, dim=dim, pop=pop, max_iter=max_iter, lb=[lower_bound] * dim, ub=[upper_bound] * dim)
+    best_x_pso, best_y_pso = pso.run()
+    print("PSO best value:", best_y_pso)
+    
+
+def run_ACO_rastrigin(rastrigin_vec, dim=30, n_ants=100, archive_size=100, max_iter=2000, lower_bound=-5.12, upper_bound=5.12, q = 0.2, xi = 0.4):
+    aco = ACOR(func=rastrigin_vec, dim=dim, n_ants=n_ants, archive_size=archive_size, max_iter=max_iter, q =q, xi= xi, lb=lower_bound, ub=upper_bound)
+    best_x_aco, best_y_aco = aco.run()
+    print("ACO best value:", best_y_aco)
 
 
 
@@ -111,12 +145,14 @@ def rastrigin(x, A=10):
 
 #main--------------------------------------
 def main():
+    
+    
     """
     Main function to run and compare optimization algorithms.
     """
     print("Starting optimization algorithms comparison...")
     
-    # Load all datasets
+    # Load all TSP datasets
     all_data = load_data()
     if not all_data:
         print("No data was loaded. Exiting.")
@@ -151,6 +187,18 @@ def main():
     
     else:
         print(f'Target dataset "{target_dataset}" not found.')
+    
+    
+    
+    print("Running all algorithms on Rastrigin-function...")
+    
+    run_GA_rastrigin(rastrigin_ga_pso, prob_mut = 0.2) #running GA with default values and added mutation_probability
+    
+    run_PSO_rastrigin(rastrigin_ga_pso) #running PSO with default values
+    
+    run_ACO_rastrigin(rastrigin_vec) #running ACO with default values
+    
+
 
 
 if __name__ == "__main__":
