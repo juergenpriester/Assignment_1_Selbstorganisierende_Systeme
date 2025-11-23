@@ -124,6 +124,35 @@ def rastrigin_ga_pso(*x):
     return rastrigin_vec(np.array(x))
 
 
+#define plot function for algorithm-performance on rastrigin
+def plot_results_rast(best_x, best_y, optimizer, algorithm_name):
+    """Plots the route and the optimization progress for Rastrigin"""
+    fig, ax = plt.subplots(1, 2, figsize=(12, 5))
+    fig.suptitle(f'{algorithm_name} Results for Rastrigin')
+
+    # Plot the best route
+    best_points_ = np.concatenate([best_points, [best_points[0]]])
+    best_points_coordinate = data.values[best_points_, :]
+    ax[0].plot(best_points_coordinate[:, 0], best_points_coordinate[:, 1], 'o-r')
+    ax[0].set_title('Best Route Found')
+    ax[0].set_xlabel('X Coordinate')
+    ax[0].set_ylabel('Y Coordinate')
+
+    # Plot the convergence
+    if algorithm_name == "Particle Swarm Optimization":
+        ax[1].plot(optimizer.generation_best_Y)
+    else:
+        ax[1].plot(optimizer.generation_best_Y)
+    ax[1].set_title('Convergence Over Generations')
+    ax[1].set_xlabel('Generation')
+    ax[1].set_ylabel('Total Distance')
+    
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.show()
+
+
+
+
 #define algorithm runs
 def run_GA_rastrigin(rastrigin, dim = 30, size_pop = 100, max_iter= 200, lower_bound = -5.12, upper_bound = 5.12, prob_mut = 0):
     ga = GA(func=rastrigin_ga_pso, n_dim=dim, size_pop=size_pop, max_iter=max_iter, lb=[lower_bound] * dim, ub=[upper_bound] * dim)
@@ -134,6 +163,7 @@ def run_GA_rastrigin(rastrigin, dim = 30, size_pop = 100, max_iter= 200, lower_b
     runtime = end - start
     
     print("GA best value:", best_y_ga)
+    plot_results_rast(best_x_ga, best_y_ga, ga, "Genetic-Algorithm")
     return best_x_ga, best_y_ga, runtime
 
 
@@ -146,6 +176,7 @@ def run_PSO_rastrigin(rastrigin, dim = 30, pop = 100, max_iter= 2000, lower_boun
     runtime = end - start
     
     print("PSO best value:", best_y_pso)
+    plot_results_rast(best_x_pso, best_y_pso, pso, "Particle Swarm Optimization")
     return best_x_pso, best_y_pso, runtime
 
 def run_ACO_rastrigin(rastrigin_vec, dim=30, n_ants=100, archive_size=100, max_iter=2000, lower_bound=-5.12, upper_bound=5.12, q = 0.2, xi = 0.4):
@@ -157,6 +188,7 @@ def run_ACO_rastrigin(rastrigin_vec, dim=30, n_ants=100, archive_size=100, max_i
     runtime = end - start
     
     print("ACO best value:", best_y_aco)
+    plot_results_rast(best_x_aco, best_y_aco, aco, "Ant-Colony Optimization")
     return best_x_aco, best_y_aco, runtime
 
 
