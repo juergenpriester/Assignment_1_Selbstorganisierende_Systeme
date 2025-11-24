@@ -36,6 +36,9 @@ class ACOR:
         # history of best values (for possible plotting)
         self.best_history = []
 
+        # history of best positions (for plotting if needed)
+        self.best_history_X = []
+
     # --- internal helpers -------------------------------------------------
 
     def _evaluate(self, X_norm):
@@ -123,8 +126,12 @@ class ACOR:
                 best_y = current_best_y
                 best_x_norm = S[0, :nVar].copy()
                 stop_counter = 0
+                self.best_history_X.append(best_x_norm.copy())
             else:
                 stop_counter += 1
+
+            # Removed this line as per instructions:
+            # self.best_history_X.append(best_x_norm.copy())
 
             if stop_counter > 5:
                 break
