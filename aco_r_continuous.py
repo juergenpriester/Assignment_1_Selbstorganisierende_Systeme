@@ -90,15 +90,12 @@ class ACOR:
 
         for it in range(1, self.max_iter + 1):
             # in original ACO_R selection is argmax(w) (always best index ~ 0)
-            selection = np.argmax(w)  # index in archive
+            selection = np.random.choice(range(nSize), p=w)  # index in archive
 
             # compute sigma for each dimension (ACO_R style)
             sigma = np.zeros((nVar,))
             for j in range(nVar):
-                sigma_s = 0.0
-                for k in range(nSize):
-                    sigma_s += abs(S[k, j] - S[selection, j])
-                sigma[j] = self.xi / (nSize - 1.0) * sigma_s
+                sigma[j] = self.xi * (np.std(S[:, j]) + 1e-6)
 
             # generate new ants around selected solution
             Stemp_norm = np.zeros((self.n_ants, nVar))
@@ -117,6 +114,16 @@ class ACOR:
             S_all = np.vstack([S, Ssample])
             S_all = S_all[np.argsort(S_all[:, -1])]
             S = S_all[:nSize, :]
+            
+            # --- periodic random restart every 50 iterations ---
+            if it % 50 == 0:
+                S_norm_random = np.random.uniform(0.0, 1.0, size=(int(self.n_ants * 0.2), nVar))
+                Srandom_vals = self._evaluate(S_norm_random).reshape(-1, 1)
+                Srandom = np.hstack([S_norm_random, Srandom_vals])
+
+                S_all = np.vstack([S, Srandom])
+                S_all = S_all[np.argsort(S_all[:, -1])]
+                S = S_all[:nSize, :]
 
             # update best
             current_best_y = S[0, -1]
@@ -132,9 +139,6 @@ class ACOR:
 
             # Removed this line as per instructions:
             # self.best_history_X.append(best_x_norm.copy())
-
-            if stop_counter > 5:
-                break
 
         # map best solution back to real space
         best_x_real = self.lb + best_x_norm * (self.ub - self.lb)

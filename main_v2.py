@@ -151,7 +151,7 @@ def plot_results_rast(best_y, optimizer, algorithm_name):
 
 
 #define algorithm runs
-def run_GA_rastrigin(rastrigin, dim = 30, size_pop = 100, max_iter= 200, lower_bound = -5.12, upper_bound = 5.12, prob_mut = 0):
+def run_GA_rastrigin(rastrigin, dim = 30, size_pop = 100, max_iter= 400, lower_bound = -5.12, upper_bound = 5.12, prob_mut = 0):
     ga = GA(func=rastrigin_ga_pso, n_dim=dim, size_pop=size_pop, max_iter=max_iter, lb=[lower_bound] * dim, ub=[upper_bound] * dim)
     
     start = time.time()
@@ -164,7 +164,7 @@ def run_GA_rastrigin(rastrigin, dim = 30, size_pop = 100, max_iter= 200, lower_b
     return best_x_ga, best_y_ga, runtime
 
 
-def run_PSO_rastrigin(rastrigin, dim = 30, pop = 100, max_iter= 2000, lower_bound = -5.12, upper_bound = 5.12, w=0.8, c1=0.1, c2=0.1):
+def run_PSO_rastrigin(rastrigin, dim = 30, pop = 100, max_iter= 400, lower_bound = -5.12, upper_bound = 5.12, w=0.8, c1=0.1, c2=0.1):
     pso = PSO(func=rastrigin_ga_pso, dim=dim, pop=pop, max_iter=max_iter, lb=[lower_bound] * dim, ub=[upper_bound] * dim)
     
     start = time.time()
@@ -176,7 +176,7 @@ def run_PSO_rastrigin(rastrigin, dim = 30, pop = 100, max_iter= 2000, lower_boun
     plot_results_rast(best_y_pso, pso, "Particle Swarm Optimization")
     return best_x_pso, best_y_pso, runtime
 
-def run_ACO_rastrigin(rastrigin_vec, dim=30, n_ants=100, archive_size=100, max_iter=2000, lower_bound=-5.12, upper_bound=5.12, q = 0.2, xi = 0.4):
+def run_ACO_rastrigin(rastrigin_vec, dim=30, n_ants=100, archive_size=100, max_iter=400, lower_bound=-5.12, upper_bound=5.12, q = 0.2, xi = 0.9):
     aco = ACOR(func=rastrigin_vec, dim=dim, n_ants=n_ants, archive_size=archive_size, max_iter=max_iter, q =q, xi= xi, lb=lower_bound, ub=upper_bound)
     
     start = time.time()
@@ -220,10 +220,11 @@ def main():
         "PSO_TSP": {}
     }
     
+    
     # ---- Loop over each TSP dataset ----
     for dataset_name, df in all_data.items():
-        if dataset_name.lower() == 'large':
-            print('skipping large dataset due to timeconstrictions')
+        if dataset_name.lower() == 'medium':
+            print('skipping medium dataset due to timeconstrictions')
             continue
         print(f"\n=============== TSP: Running algorithms on '{dataset_name}' ===============")
 
@@ -258,13 +259,13 @@ def main():
 
     print("\n======== TSP Best Distance Table ========")
     print(tsp_best_df)
-
+    
 
     # ---- Run Rastrigin ----
     print("\n===================== Running all algorithms on Rastrigin-function...")
 
     ras_results = {}
-
+    
     # GA
     _, best_ga, runtime_ga = run_GA_rastrigin(rastrigin_ga_pso, prob_mut=0.2)
     ras_results["GA"] = {"runtime": runtime_ga, "min": float(best_ga)}
@@ -272,7 +273,7 @@ def main():
     # PSO
     _, best_pso, runtime_pso = run_PSO_rastrigin(rastrigin_ga_pso)
     ras_results["PSO"] = {"runtime": runtime_pso, "min": float(best_pso)}
-
+    
     # ACO
     _, best_aco, runtime_aco = run_ACO_rastrigin(rastrigin_vec)
     ras_results["ACO"] = {"runtime": runtime_aco, "min": float(best_aco)}
