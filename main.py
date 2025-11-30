@@ -38,7 +38,7 @@ def plot_results(best_points, data, optimizer, algorithm_name, dataset_name):
 
     # Plot the convergence
     if algorithm_name == "Particle Swarm Optimization":
-        ax[1].plot(optimizer.gbest_y)
+        ax[1].plot(optimizer.gbest_y_hist)
     else:
         ax[1].plot(optimizer.generation_best_Y)
     ax[1].set_title('Convergence Over Generations')
@@ -49,19 +49,24 @@ def plot_results(best_points, data, optimizer, algorithm_name, dataset_name):
     plt.show()
 
 
-def run_genetic_algorithm(dataset_name, df, cal_total_distance_func, num_cities, size_pop=100, max_iter=2000):
+def run_genetic_algorithm(dataset_name, df, cal_total_distance_func, num_cities, size_pop=300, max_iter=4000):
     """
     Runs the GA_TSP optimizer on a given dataset.
     """
     print(f'\n--- Running Genetic Algorithm on "{dataset_name}" dataset ---')
 
     ga_tsp = GA_TSP(func=cal_total_distance_func, n_dim=num_cities, size_pop=size_pop, max_iter=max_iter, prob_mut=0.1)
+    
+    start = time.time()
     best_points, best_distance = ga_tsp.run()
+    end = time.time()
+    runtime = end - start
 
     print(f"GA Optimization complete for '{dataset_name}'!")
     print(f"Best distance: {best_distance}")
 
     plot_results(best_points, df, ga_tsp, "Genetic Algorithm", dataset_name)
+    return best_points, best_distance, runtime
 
 def run_ant_colony_optimization(dataset_name, df, cal_total_distance_func, num_cities, distance_matrix, size_pop=50, max_iter=150):
     """
@@ -70,12 +75,17 @@ def run_ant_colony_optimization(dataset_name, df, cal_total_distance_func, num_c
     print(f'\n--- Running Ant Colony Optimization on "{dataset_name}" dataset ---')
     
     aca = ACA_TSP(func=cal_total_distance_func, n_dim=num_cities, size_pop=size_pop, max_iter=max_iter, distance_matrix=distance_matrix)
+    
+    start = time.time()
     best_points, best_distance = aca.run()
+    end = time.time()
+    runtime = end - start
 
     print(f"Ant Colony Optimization complete for '{dataset_name}'!")
     print(f"Best distance: {best_distance}")
 
     plot_results(best_points, df, aca, "Ant Colony Optimization", dataset_name)
+    return best_points, best_distance, runtime
 
 def run_particle_swarm_optimization(dataset_name, df,cal_total_distance_func, num_cities, size_pop=200, max_iter=800):
     """
@@ -86,15 +96,21 @@ def run_particle_swarm_optimization(dataset_name, df,cal_total_distance_func, nu
     print(f'\n--- Running Particle Swarm Optimization on "{dataset_name}" dataset ---')
     
     pso_tsp = PSO_TSP(func=cal_total_distance_func, n_dim=num_cities, size_pop=size_pop, max_iter=max_iter, w=0.8, c1=0.1, c2=0.1)
+    
+    start = time.time()
     best_points, best_distance = pso_tsp.run()
+    end = time.time()
+    runtime = end - start
 
     print(f"Particle Swarm Optimization complete for '{dataset_name}'!")
     print(f"Best distance: {best_distance}")
 
     plot_results(best_points, df, pso_tsp, "Particle Swarm Optimization", dataset_name)
+    return best_points, best_distance, runtime
 
 
 #Implementation for Rastrigin--------------
+##define function(s)
 def rastrigin_vec(x, A=10):
     """
     x: 1D numpy array-like
@@ -108,23 +124,69 @@ def rastrigin_ga_pso(*x):
     return rastrigin_vec(np.array(x))
 
 
-def run_GA_rastrigin(rastrigin, dim = 30, size_pop = 100, max_iter= 200, lower_bound = -5.12, upper_bound = 5.12, prob_mut = 0):
+#define plot function for algorithms on rastrigin
+def plot_results_rast(best_y, optimizer, algorithm_name):
+    """Plots ONLY the convergence curve for the Rastrigin runs."""
+    plt.figure(figsize=(8, 5))
+    plt.title(f"{algorithm_name} Convergence on Rastrigin")
+    plt.xlabel("Iteration")
+    plt.ylabel("Best Value")
+
+    # Determine which convergence history exists
+    if hasattr(optimizer, "gbest_y_hist"):                 # PSO
+        convergence = optimizer.gbest_y_hist
+    elif hasattr(optimizer, "generation_best_Y"):     # GA
+        convergence = optimizer.generation_best_Y
+    elif hasattr(optimizer, "best_history"):          # ACO (your class)
+        convergence = optimizer.best_history
+    else:
+        convergence = []
+
+    plt.plot(convergence, label="Best so far")
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+
+
+
+#define algorithm runs
+def run_GA_rastrigin(rastrigin, dim = 15, size_pop = 100, max_iter= 400, lower_bound = -5.12, upper_bound = 5.12, prob_mut = 0):
     ga = GA(func=rastrigin_ga_pso, n_dim=dim, size_pop=size_pop, max_iter=max_iter, lb=[lower_bound] * dim, ub=[upper_bound] * dim)
+    
+    start = time.time()
     best_x_ga, best_y_ga = ga.run() #best_x is position of minima found. best_y is value of minima
+    end = time.time()
+    runtime = end - start
+    
     print("GA best value:", best_y_ga)
-    
+    plot_results_rast(best_y_ga, ga, "Genetic Algorithm")
+    return best_x_ga, best_y_ga, runtime
 
 
-def run_PSO_rastrigin(rastrigin, dim = 30, pop = 100, max_iter= 2000, lower_bound = -5.12, upper_bound = 5.12, w=0.8, c1=0.1, c2=0.1):
+def run_PSO_rastrigin(rastrigin, dim = 15, pop = 100, max_iter= 400, lower_bound = -5.12, upper_bound = 5.12, w=0.8, c1=0.7, c2=0.7):
     pso = PSO(func=rastrigin_ga_pso, dim=dim, pop=pop, max_iter=max_iter, lb=[lower_bound] * dim, ub=[upper_bound] * dim)
-    best_x_pso, best_y_pso = pso.run()
-    print("PSO best value:", best_y_pso)
     
+    start = time.time()
+    best_x_pso, best_y_pso = pso.run()
+    end = time.time()
+    runtime = end - start
+    
+    print("PSO best value:", best_y_pso)
+    plot_results_rast(best_y_pso, pso, "Particle Swarm Optimization")
+    return best_x_pso, best_y_pso, runtime
 
-def run_ACO_rastrigin(rastrigin_vec, dim=30, n_ants=100, archive_size=100, max_iter=2000, lower_bound=-5.12, upper_bound=5.12, q = 0.2, xi = 0.4):
+def run_ACO_rastrigin(rastrigin_vec, dim=15, n_ants=100, archive_size=100, max_iter=400, lower_bound=-5.12, upper_bound=5.12, q = 0.3, xi = 0.8):
     aco = ACOR(func=rastrigin_vec, dim=dim, n_ants=n_ants, archive_size=archive_size, max_iter=max_iter, q =q, xi= xi, lb=lower_bound, ub=upper_bound)
+    
+    start = time.time()
     best_x_aco, best_y_aco = aco.run()
+    end = time.time()
+    runtime = end - start
+    
     print("ACO best value:", best_y_aco)
+    plot_results_rast(best_y_aco, aco, "Ant Colony Optimization")
+    return best_x_aco, best_y_aco, runtime
 
 
 
@@ -133,59 +195,97 @@ def run_ACO_rastrigin(rastrigin_vec, dim=30, n_ants=100, archive_size=100, max_i
 
 #main--------------------------------------
 def main():
-    
-    
-    """
-    Main function to run and compare optimization algorithms.
-    """
     print("Starting optimization algorithms comparison...")
     
-    # Load all TSP datasets
+    # ---- Load TSP datasets ----
     all_data = load_data()
     if not all_data:
-        print("No data was loaded. Exiting.")
+        print("No data loaded. Exiting.")
         return
 
-    # Calculate distance matrices for all datasets
-    distance_matrices = {name: spatial.distance.cdist(df.values, df.values, metric='euclidean') for name, df in all_data.items()}
+    distance_matrices = {
+        name: spatial.distance.cdist(df.values, df.values)
+        for name, df in all_data.items()
+    }
 
-    # --- Define which dataset to run the optimizations on ---
-    target_dataset = "medium"
+    tsp_runtime = {
+        "GA_TSP": {},
+        "ACO_TSP": {},
+        "PSO_TSP": {}
+    }
+
+    tsp_best = {
+        "GA_TSP": {},
+        "ACO_TSP": {},
+        "PSO_TSP": {}
+    }
     
-    if target_dataset in all_data:
-        print(f'\n>>> Running all algorithms on the "{target_dataset}" dataset <<<')
-        df = all_data[target_dataset]
-        distance_matrix = distance_matrices[target_dataset]
+    
+    # ---- Loop over each TSP dataset ----
+    for dataset_name, df in all_data.items():
+        # only do large dataset
+        if dataset_name.lower() != 'large':
+            print(f'skipping {dataset_name} dataset due to timeconstrictions')
+            continue
+        print(f"\n=============== TSP: Running algorithms on '{dataset_name}' ===============")
+
+        distance_matrix = distance_matrices[dataset_name]
         num_cities = distance_matrix.shape[0]
-        print(f"Number of cities: {num_cities}")
 
-        # Define the cost function once, using the selected distance_matrix
         def cal_total_distance(routine):
-            num_points, = routine.shape
-            return sum([distance_matrix[routine[i % num_points], routine[(i + 1) % num_points]] for i in range(num_points)])
+            n, = routine.shape
+            return sum(distance_matrix[routine[i % n], routine[(i + 1) % n]] for i in range(n))
 
-        # Run Ant Colony Optimization
-        run_ant_colony_optimization(target_dataset, df, cal_total_distance, num_cities, distance_matrix, size_pop=50, max_iter=150)
+        # ========== GA_TSP ==========
+        _, best_dist_ga, runtime_ga = run_genetic_algorithm(dataset_name, df, cal_total_distance, num_cities)
+        tsp_runtime["GA_TSP"][dataset_name] = runtime_ga
+        tsp_best["GA_TSP"][dataset_name] = best_dist_ga
 
-        # Run Genetic Algorithm
-        run_genetic_algorithm(target_dataset, df, cal_total_distance, num_cities, size_pop=100, max_iter=2000)
+        # ========== ACO_TSP ==========
+        _, best_dist_aco, runtime_aco = run_ant_colony_optimization(dataset_name, df, cal_total_distance, num_cities, distance_matrix)
+        tsp_runtime["ACO_TSP"][dataset_name] = runtime_aco
+        tsp_best["ACO_TSP"][dataset_name] = best_dist_aco
 
-        # Run Particle Swarm Optimization
-        run_particle_swarm_optimization(target_dataset, df, cal_total_distance, num_cities, size_pop=200, max_iter=800)
+        # ========== PSO_TSP ==========
+        _, best_dist_pso, runtime_pso = run_particle_swarm_optimization(dataset_name, df, cal_total_distance, num_cities)
+        tsp_runtime["PSO_TSP"][dataset_name] = runtime_pso
+        tsp_best["PSO_TSP"][dataset_name] = best_dist_pso
+
+    # ---- Print TSP tables ----
+    tsp_runtime_df = pd.DataFrame(tsp_runtime).T
+    tsp_best_df = pd.DataFrame(tsp_best).T
+
+    print("\n======== TSP Runtime Table [s] ========")
+    print(tsp_runtime_df)
+
+    print("\n======== TSP Best Distance Table ========")
+    print(tsp_best_df)
     
-    else:
-        print(f'Target dataset "{target_dataset}" not found.')
     
+    # ---- Run Rastrigin ----
+    print("\n===================== Running all algorithms on Rastrigin-function...")
+
+    ras_results = {}
     
+    # GA
+    _, best_ga, runtime_ga = run_GA_rastrigin(rastrigin_ga_pso, prob_mut=0.2)
+    ras_results["GA"] = {"runtime": runtime_ga, "min": float(best_ga)}
+
+    # PSO
+    _, best_pso, runtime_pso = run_PSO_rastrigin(rastrigin_ga_pso)
+    ras_results["PSO"] = {"runtime": runtime_pso, "min": float(best_pso)}
     
-    print("Running all algorithms on Rastrigin-function...")
+    # ACO
+    _, best_aco, runtime_aco = run_ACO_rastrigin(rastrigin_vec)
+    ras_results["ACO"] = {"runtime": runtime_aco, "min": float(best_aco)}
+
+    # ---- Print Rastrigin tables ----
+    ras_df = pd.DataFrame(ras_results).T
+
+    print("\n======== Rastrigin Results ========")
+    print(ras_df)
     
-    run_GA_rastrigin(rastrigin_ga_pso, prob_mut = 0.2) #running GA with default values and added mutation_probability
-    
-    run_PSO_rastrigin(rastrigin_ga_pso) #running PSO with default values
-    
-    run_ACO_rastrigin(rastrigin_vec) #running ACO with default values
-    
+    print("\nAll experiments completed.")
 
 
 
